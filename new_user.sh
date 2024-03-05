@@ -12,6 +12,15 @@ handle_error() {
     exit 1
 }
 
+# Function to find the next available UID
+next_available_uid() {
+    local uid=500  # Start checking from UID 500
+    while grep -q "^$uid:" /etc/passwd; do
+        ((uid++))
+    done
+    echo "$uid"
+}
+
 # Get name for local account creation
 echo "Enter user's login name"
 read username
@@ -54,9 +63,11 @@ fi
 
 # Set UID and primary group
 echo "Setting User ID and primary group..."
-if ! sudo $new . -create "$user" UniqueID 501; then
+uid=$(next_available_uid)
+if ! sudo $new . -create "$user" UniqueID "$uid"; then
     handle_error "Setting User ID"
 fi
+
 if ! sudo $new . -create "$user" PrimaryGroupID 20; then
     handle_error "Setting primary group"
 fi

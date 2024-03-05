@@ -18,16 +18,16 @@ name="$display_name"
 echo "This computer will be assigned to $name"
 
 # Account creation
-if $new . -read "$user" &>/dev/null; then
+if sudo $new . -read "$user" &>/dev/null; then
     echo "Error: User already exists."
     exit 1
 fi
 
-$new . -create "$user"
-$new . -create "$user" RealName "$name"
-$new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"
-$new . -create "$user" UserShell /bin/bash
-$new . -create "$user" NFSHomeDirectory "/Users/$user"
+sudo $new . -create "$user"
+sudo $new . -create "$user" RealName "$name"
+sudo $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"
+sudo $new . -create "$user" UserShell /bin/bash
+sudo $new . -create "$user" NFSHomeDirectory "/Users/$user"
 if ! $dir "$user/Desktop/Remote Share"; then
     echo "Error: Could not create directory."
     exit 1
@@ -42,7 +42,7 @@ read userInput
 
 if [ "$userInput" == "yes" ]; then
     echo "Granting admin privileges to user..."
-    if ! $new . -append /Groups/admin GroupMembership "$user"; then
+    if ! sudo $new . -append /Groups/admin GroupMembership "$user"; then
         echo "Error: Could not grant admin privileges."
         exit 1
     fi

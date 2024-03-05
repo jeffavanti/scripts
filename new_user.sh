@@ -23,11 +23,36 @@ if sudo $new . -read "$user" &>/dev/null; then
     exit 1
 fi
 
-sudo $new . -create "$user"
-sudo $new . -create "$user" RealName "$name"
-sudo $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"
-sudo $new . -create "$user" UserShell /bin/bash
-sudo $new . -create "$user" NFSHomeDirectory "/Users/$user"
+echo "Creating user..."
+if ! sudo $new . -create "$user"; then
+    echo "Error: Could not create user."
+    exit 1
+fi
+
+echo "Setting Display name..."
+if ! sudo $new . -create "$user" RealName "$name"; then
+    echo "Error: Could not set Display Name."
+    exit 1
+fi
+
+echo "Setting password..."
+if ! sudo $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"; then
+    echo "Error: Could not set password."
+    exit 1
+fi
+
+echo "Setting user shell..."
+if ! sudo $new . -create "$user" UserShell /bin/bash; then
+    echo "Error: Could not set user shell."
+    exit 1
+fi
+
+echo "Setting NFSHomeDirectory..."
+if ! sudo $new . -create "$user" NFSHomeDirectory "/Users/$user"; then
+    echo "Error: Could not set Home Directory."
+    exit 1
+fi
+
 if ! $dir "$user/Desktop/Remote Share"; then
     echo "Error: Could not create directory."
     exit 1

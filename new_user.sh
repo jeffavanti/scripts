@@ -23,7 +23,7 @@ $new . -create "$user" RealName "$name"
 $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"
 $new . -create "$user" UserShell /bin/bash
 $new . -create "$user" NFSHomeDirectory "/Users/$user"
-$dir "/Users/$user/Desktop/Remote Share"
+$dir "$user/Desktop/Remote Share"
 
 # Set new name for computer
 /usr/sbin/scutil --set Hostname "$username"

@@ -17,6 +17,15 @@ user_exists() {
     $new . -read "/Users/$1" &> /dev/null
 }
 
+# Function to find the next available UID starting from 900
+next_available_uid() {
+    local uid=900
+    while grep -q "^$uid:" /etc/passwd; do
+        ((uid++))
+    done
+    echo "$uid"
+}
+
 # Get name for local account creation
 echo "Enter user's login name"
 read username

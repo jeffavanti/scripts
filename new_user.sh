@@ -1,75 +1,67 @@
 #!/bin/bash
 
 # Variables
-new=/usr/bin/dscl
-dir=/bin/mkdir
+DSCL="/usr/bin/dscl"
+MKDIR="/bin/mkdir"
 
-# Get name for local account creation
-echo "Enter user's login name"
-read username
+# Function to display error and exit
+display_error_and_exit() {
+    echo "Error: $1"
+    exit 1
+}
 
-echo "Enter user's Display Name"
-read display_name
+# Get user input
+read -p "Enter user's login name: " username
+read -p "Enter user's Display Name: " display_name
 
-# User input
+# User-specific variables
 user="/Users/$username"
 name="$display_name"
+remote_share_dir="$user/Desktop/Remote Share"
 
 echo "This computer will be assigned to $name"
 
 # Account creation
-if sudo $new . -read "$user" &>/dev/null; then
-    echo "Error: User already exists."
-    exit 1
-fi
-
 echo "Creating user..."
-if ! sudo $new . -create "$user"; then
-    echo "Error: Could not create user."
-    exit 1
+if ! sudo $DSCL . -create "$user"; then
+    display_error_and_exit "Could not create user."
 fi
 
-echo "Setting Display name..."
-if ! sudo $new . -create "$user" RealName "$name"; then
-    echo "Error: Could not set Display Name."
-    exit 1
+echo "Setting RealName..."
+if ! sudo $DSCL . -create "$user" RealName "$name"; then
+    display_error_and_exit "Could not set RealName."
 fi
 
 echo "Setting password..."
-if ! sudo $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"; then
-    echo "Error: Could not set password."
-    exit 1
+if ! sudo $DSCL . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"; then
+    display_error_and_exit "Could not set password."
 fi
 
 echo "Setting user shell..."
-if ! sudo $new . -create "$user" UserShell /bin/bash; then
-    echo "Error: Could not set user shell."
-    exit 1
+if ! sudo $DSCL . -create "$user" UserShell /bin/bash; then
+    display_error_and_exit "Could not set user shell."
 fi
 
 echo "Setting NFSHomeDirectory..."
-if ! sudo $new . -create "$user" NFSHomeDirectory "/Users/$user"; then
-    echo "Error: Could not set Home Directory."
-    exit 1
+if ! sudo $DSCL . -create "$user" NFSHomeDirectory "/Users/$user"; then
+    display_error_and_exit "Could not set NFSHomeDirectory."
 fi
 
-if ! $dir "$user/Desktop/Remote Share"; then
-    echo "Error: Could not create directory."
-    exit 1
+# Create user's home directory
+echo "Creating user's home directory..."
+if ! sudo $MKDIR "$remote_share_dir"; then
+    display_error_and_exit "Could not create user's home directory."
 fi
 
 # Set new name for computer
-/usr/sbin/scutil --set HostName "$username"
+sudo /usr/sbin/scutil --set HostName "$username"
 
 # Admin rights
-echo "Does the user need admin privileges? (yes/no)"
-read userInput
-
+read -p "Does the user need admin privileges? (yes/no): " userInput
 if [ "$userInput" == "yes" ]; then
     echo "Granting admin privileges to user..."
-    if ! sudo $new . -append /Groups/admin GroupMembership "$user"; then
-        echo "Error: Could not grant admin privileges."
-        exit 1
+    if ! sudo $DSCL . -append /Groups/admin GroupMembership "$user"; then
+        display_error_and_exit "Could not grant admin privileges."
     fi
 
     echo "Admin privileges granted to user: $user"
@@ -78,5 +70,10 @@ else
 fi
 
 # Reboot computer
-echo "Rebooting computer..."
-/sbin/reboot
+read -p "Do you want to reboot the computer now? (yes/no): " rebootInput
+if [ "$rebootInput" == "yes" ]; then
+    echo "Rebooting computer..."
+    sudo /sbin/reboot
+else
+    echo "Script completed. You may need to reboot the computer manually for changes to take effect."
+fi

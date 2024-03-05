@@ -1,4 +1,4 @@
-#!/bin/sh   
+#!/bin/bash
 
 # Variables
 new=/usr/bin/dscl
@@ -18,23 +18,34 @@ name="$display_name"
 echo "This computer will be assigned to $name"
 
 # Account creation
+if $new . -read "$user" &>/dev/null; then
+    echo "Error: User already exists."
+    exit 1
+fi
+
 $new . -create "$user"
 $new . -create "$user" RealName "$name"
 $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"
 $new . -create "$user" UserShell /bin/bash
 $new . -create "$user" NFSHomeDirectory "/Users/$user"
-$dir "$user/Desktop/Remote Share"
+if ! $dir "$user/Desktop/Remote Share"; then
+    echo "Error: Could not create directory."
+    exit 1
+fi
 
 # Set new name for computer
-/usr/sbin/scutil --set Hostname "$username"
+/usr/sbin/scutil --set HostName "$username"
 
 # Admin rights
 echo "Does the user need admin privileges? (yes/no)"
 read userInput
 
 if [ "$userInput" == "yes" ]; then
-    echo "Granting admin privileges to user..." 
-    $new . -append /Groups/admin GroupMembership "$user"
+    echo "Granting admin privileges to user..."
+    if ! $new . -append /Groups/admin GroupMembership "$user"; then
+        echo "Error: Could not grant admin privileges."
+        exit 1
+    fi
 
     echo "Admin privileges granted to user: $user"
 else
@@ -42,4 +53,5 @@ else
 fi
 
 # Reboot computer
+echo "Rebooting computer..."
 /sbin/reboot

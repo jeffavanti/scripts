@@ -52,9 +52,13 @@ if ! sudo $new . -create "$user" UserShell /bin/bash; then
     handle_error "Setting user shell"
 fi
 
-echo "Setting NFSHomeDirectory..."
-if ! sudo $new . -create "$user" NFSHomeDirectory "/Users/$username"; then
-    handle_error "Setting NFSHomeDirectory"
+# Set UID and primary group
+echo "Setting User ID and primary group..."
+if ! sudo $new . -create "$user" UniqueID 501; then
+    handle_error "Setting User ID"
+fi
+if ! sudo $new . -create "$user" PrimaryGroupID 20; then
+    handle_error "Setting primary group"
 fi
 
 # Create user's home directory

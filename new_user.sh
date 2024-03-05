@@ -12,18 +12,20 @@ handle_error() {
     exit 1
 }
 
-# Function to find the next available UID
-next_available_uid() {
-    local uid=500  # Start checking from UID 500
-    while grep -q "^$uid:" /etc/passwd; do
-        ((uid++))
-    done
-    echo "$uid"
+# Function to check if a user exists
+user_exists() {
+    $new . -read "/Users/$1" &> /dev/null
 }
 
 # Get name for local account creation
 echo "Enter user's login name"
 read username
+
+# Check if the user already exists
+if user_exists "$username"; then
+    echo "Error: User '$username' already exists."
+    exit 1
+fi
 
 echo "Enter user's Display Name"
 read display_name

@@ -36,6 +36,12 @@ if ! sudo $new . -create "$user" RealName "$name"; then
     handle_error "Setting RealName"
 fi
 
+# Set Full Name for login screen display
+echo "Setting Full Name for login screen..."
+if ! sudo $new . -create "$user" UserFullName "$name"; then
+    handle_error "Setting Full Name for login screen"
+fi
+
 echo "Setting password..."
 if ! sudo $new . -passwd "$user" "$(echo $username | awk '{print toupper(substr($0,1,1))tolower(substr($0,2))}')$(date +%y)"; then
     handle_error "Setting password"
